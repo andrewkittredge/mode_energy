@@ -37,7 +37,7 @@ class ModoEnergyAPIClient:
         while url:
             response = requests.get(
                 url,
-                # headers=self.headers,
+                headers={"accept": "application/json"},
                 params=params,
             )
             response.raise_for_status()
