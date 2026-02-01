@@ -69,7 +69,10 @@ class ModoEnergyAPIClient:
         Params can include date_from, date_to, etc.
         """
         endpoint = "us/ercot/system/fuel-mix"
-        return self.get_paginated(endpoint, params)
+        df = self.get_paginated(endpoint, params)
+        df["timestamp"] = pd.to_datetime(df["timestamp"])
+        df.set_index("timestamp", inplace=True)
+        return df
 
 
 # Example usage:
