@@ -2,6 +2,7 @@ import os
 import requests
 import pandas as pd
 from typing import Optional, Dict, Any
+from datetime import date
 
 
 from tqdm.auto import tqdm
@@ -61,14 +62,18 @@ class ModoEnergyAPIClient:
         return df
 
     def get_ercot_generation_fuel_mix(
-        self, params: Optional[Dict[str, Any]] = None
+        self, date_from: date, date_to: date
     ) -> pd.DataFrame:
         """
         Fetch ERCOT generation fuel mix data.
         Example endpoint: 'us/ercot/nodal/generation-fuel-mix'
-        Params can include date_from, date_to, etc.
+        Accepts date_from and date_to as arguments (YYYY-MM-DD or YYYY-MM format).
         """
         endpoint = "us/ercot/system/fuel-mix"
+        params = {
+            "date_from": date_from.strftime("%Y-%m-%d"),
+            "date_to": date_to.strftime("%Y-%m-%d"),
+        }
         df = self.get_paginated(endpoint, params)
         df["timestamp"] = pd.to_datetime(df["timestamp"])
         df.set_index("timestamp", inplace=True)
