@@ -3,7 +3,8 @@ import requests
 import pandas as pd
 from typing import Optional, Dict, Any
 from datetime import date
-
+import time
+import logging
 
 from tqdm.auto import tqdm
 
@@ -36,18 +37,32 @@ class ModoEnergyAPIClient:
         """
         Fetches all paginated results from an endpoint and returns as a pandas DataFrame.
         Shows a progress bar if tqdm is installed.
+        If a 403 error is encountered, sleeps for 65 seconds and retries the request.
         """
+
         url = f"{self.BASE_URL}/{endpoint}"
         df = pd.DataFrame()
         page = 0
         with tqdm(total=None, desc="Fetching pages ", unit="page") as pbar:
             while url:
-                response = requests.get(
-                    url,
-                    headers={"accept": "application/json"},
-                    params=params,
-                )
-                response.raise_for_status()
+                while True:
+                    try:
+                        response = requests.get(
+                            url,
+                            headers={"accept": "application/json"},
+                            params=params,
+                        )
+                        response.raise_for_status()
+                        break
+                    except requests.exceptions.HTTPError as e:
+                        if response.status_code == 403:
+                            logging.warning(
+                                "Received 403 Forbidden. Sleeping for 65 seconds before retrying..."
+                            )
+                            time.sleep(65)
+                            continue
+                        else:
+                            raise
                 data = response.json()
                 if "results" in data:
                     df = pd.concat(
