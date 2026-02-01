@@ -4,6 +4,9 @@ import pandas as pd
 from typing import Optional, Dict, Any
 
 
+from tqdm.auto import tqdm
+
+
 class ModoEnergyAPIClient:
     """
     Python client for the Modo Energy API.
@@ -31,22 +34,42 @@ class ModoEnergyAPIClient:
     ) -> pd.DataFrame:
         """
         Fetches all paginated results from an endpoint and returns as a pandas DataFrame.
+        Shows a progress bar if tqdm is installed.
         """
         url = f"{self.BASE_URL}/{endpoint}"
         df = pd.DataFrame()
-        while url:
-            response = requests.get(
-                url,
-                headers={"accept": "application/json"},
-                params=params,
-            )
-            response.raise_for_status()
-            data = response.json()
-            if "results" in data:
-                df = pd.concat([df, pd.DataFrame(data["results"])], ignore_index=True)
-            url = data.get("next")
-            params = None  # Only use params on first request
+        page = 0
+        with tqdm(total=None, desc="Fetching pages ", unit="page") as pbar:
+            while url:
+                response = requests.get(
+                    url,
+                    headers={"accept": "application/json"},
+                    params=params,
+                )
+                response.raise_for_status()
+                data = response.json()
+                if "results" in data:
+                    df = pd.concat(
+                        [df, pd.DataFrame(data["results"])], ignore_index=True
+                    )
+                url = data.get("next")
+                params = None  # Only use params on first request
+                page += 1
+
+                pbar.update(1)
+
         return df
+
+    def get_ercot_generation_fuel_mix(
+        self, params: Optional[Dict[str, Any]] = None
+    ) -> pd.DataFrame:
+        """
+        Fetch ERCOT generation fuel mix data.
+        Example endpoint: 'us/ercot/nodal/generation-fuel-mix'
+        Params can include date_from, date_to, etc.
+        """
+        endpoint = "us/ercot/system/fuel-mix"
+        return self.get_paginated(endpoint, params)
 
 
 # Example usage:
