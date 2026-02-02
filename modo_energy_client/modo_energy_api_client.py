@@ -7,6 +7,10 @@ import time
 import logging
 
 from tqdm.auto import tqdm
+from pandera.typing import DataFrame as pandera_DataFrame
+import pandera as pa
+
+from modo_energy_client import ERCOTGenerationFuelMixSchema
 
 
 class ModoEnergyAPIClient:
@@ -76,9 +80,10 @@ class ModoEnergyAPIClient:
 
         return df
 
+    @pa.check_types
     def get_ercot_generation_fuel_mix(
         self, date_from: date, date_to: date
-    ) -> pd.DataFrame:
+    ) -> pandera_DataFrame[ERCOTGenerationFuelMixSchema.ERCOTGenerationFuelMixSchema]:
         """
         Fetch ERCOT generation fuel mix data.
         Example endpoint: 'us/ercot/nodal/generation-fuel-mix'
@@ -93,9 +98,3 @@ class ModoEnergyAPIClient:
         df["timestamp"] = pd.to_datetime(df["timestamp"])
         df.set_index("timestamp", inplace=True)
         return df
-
-
-# Example usage:
-# client = ModoEnergyAPIClient(api_token="your_x_token")
-# df = client.get_paginated("gb/modo/markets/system-price-live", params={"date_from": "2024-01-25", "date_to": "2024-01-25"})
-# print(df.head())
