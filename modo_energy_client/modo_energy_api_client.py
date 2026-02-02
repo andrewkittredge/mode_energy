@@ -11,6 +11,7 @@ from pandera.typing import DataFrame as pandera_DataFrame
 import pandera as pa
 
 from modo_energy_client import ERCOTGenerationFuelMixSchema
+from modo_energy_client import ERCOT_BESS_owners_schema
 
 
 class ModoEnergyAPIClient:
@@ -97,4 +98,24 @@ class ModoEnergyAPIClient:
         df = self.get_paginated(endpoint, params)
         df["timestamp"] = pd.to_datetime(df["timestamp"])
         df.set_index("timestamp", inplace=True)
+        return df
+
+    @pa.check_types
+    def get_ercot_modo_owners(
+        self, date_from: str = None, date_to: str = None, **kwargs
+    ) -> pandera_DataFrame[ERCOT_BESS_owners_schema.ERCOT_BESS_owners_schema]:
+        """
+        Fetch ERCOT BESS owners data from the 'us/ercot/modo/owners' endpoint.
+        Optionally accepts date_from and date_to as YYYY-MM or YYYY-MM-DD strings.
+        Additional query params can be passed as kwargs.
+        """
+        endpoint = "us/ercot/modo/owners"
+        params = {}
+
+        params["date_from"] = date_from
+
+        params["date_to"] = date_to
+        params.update(kwargs)
+        df = self.get_paginated(endpoint, params)
+        df["date"] = pd.to_datetime(df["date"]).dt.normalize()
         return df
