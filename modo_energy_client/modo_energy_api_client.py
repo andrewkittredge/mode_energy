@@ -1,5 +1,6 @@
 import os
 import requests
+import requests_cache
 import pandas as pd
 from typing import Optional, Dict, Any
 from datetime import date
@@ -13,6 +14,8 @@ import pandera as pa
 from modo_energy_client import ERCOTGenerationFuelMixSchema
 from modo_energy_client import ERCOT_BESS_owners_schema
 
+REQUESTS_CACHE = requests_cache.CachedSession(cache_name="MODO_API_CACHE")
+
 
 class ModoEnergyAPIClient:
     """
@@ -22,19 +25,19 @@ class ModoEnergyAPIClient:
 
     BASE_URL = "https://api.modoenergy.com/pub/v1"
 
-    def __init__(self, api_token: Optional[str] = None):
+    def __init__(
+        self,
+        api_token: Optional[str] = None,
+        cache_name: str = "modo_energy_cache",
+        cache_expire: int = 600,
+    ):
         self.api_token = api_token or os.getenv("MODO_API_TOKEN")
         if not self.api_token:
             raise ValueError(
                 "Modo Energy API token must be provided or set in the MODO_API_TOKEN environment variable."
             )
         self.headers = {"X-Token": self.api_token}
-
-    def get(self, endpoint: str, params: Optional[Dict[str, Any]] = None) -> Dict:
-        url = f"{self.BASE_URL}/{endpoint}"
-        response = requests.get(url, headers=self.headers, params=params)
-        response.raise_for_status()
-        return response.json()
+        # Set up requests-cache for all requests
 
     def get_paginated(
         self, endpoint: str, params: Optional[Dict[str, Any]] = None
@@ -52,7 +55,7 @@ class ModoEnergyAPIClient:
             while url:
                 while True:
                     try:
-                        response = requests.get(
+                        response = REQUESTS_CACHE.get(
                             url,
                             headers={"accept": "application/json"},
                             params=params,
@@ -108,6 +111,8 @@ class ModoEnergyAPIClient:
         Fetch ERCOT BESS owners data from the 'us/ercot/modo/owners' endpoint.
         Optionally accepts date_from and date_to as YYYY-MM or YYYY-MM-DD strings.
         Additional query params can be passed as kwargs.
+
+        https://developers.modoenergy.com/reference/bess-owners-ercot
         """
         endpoint = "us/ercot/modo/owners"
         params = {}
