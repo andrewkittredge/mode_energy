@@ -89,6 +89,11 @@ class ModoEnergyAPIClient:
         self, date_from: date, date_to: date
     ) -> pandera_DataFrame[ERCOTGenerationFuelMixSchema.ERCOTGenerationFuelMixSchema]:
         """
+        The fuel-mix of ERCOT generation in MW.
+
+        https://developers.modoenergy.com/reference/generation-fuel-mix
+
+
         Fetch ERCOT generation fuel mix data.
         Example endpoint: 'us/ercot/nodal/generation-fuel-mix'
         Accepts date_from and date_to as arguments (YYYY-MM-DD or YYYY-MM format).
@@ -108,11 +113,15 @@ class ModoEnergyAPIClient:
         self, date_from: str = None, date_to: str = None, **kwargs
     ) -> pandera_DataFrame[ERCOT_BESS_owners_schema.ERCOT_BESS_owners_schema]:
         """
+        The power and energy capacity of the ERCOT BESS assets owned by each Owner on a monthly basis. Updated on the first of the month every month.
+
+        https://developers.modoenergy.com/reference/bess-owners-ercot
+
+
         Fetch ERCOT BESS owners data from the 'us/ercot/modo/owners' endpoint.
         Optionally accepts date_from and date_to as YYYY-MM or YYYY-MM-DD strings.
         Additional query params can be passed as kwargs.
 
-        https://developers.modoenergy.com/reference/bess-owners-ercot
         """
         endpoint = "us/ercot/modo/owners"
         params = {}
