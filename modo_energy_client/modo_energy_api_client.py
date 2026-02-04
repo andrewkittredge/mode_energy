@@ -11,8 +11,10 @@ from tqdm.auto import tqdm
 from pandera.typing import DataFrame as pandera_DataFrame
 import pandera as pa
 
-from modo_energy_client import ERCOTGenerationFuelMixSchema
-from modo_energy_client import ERCOT_BESS_owners_schema
+from modo_energy_client.schemas.ERCOT_BESS_owners_schema import ERCOT_BESS_Owners_Schema
+from modo_energy_client.schemas.ERCOT_generation_fuel_mix_schema import (
+    ERCOTGenerationFuelMixSchema,
+)
 
 
 class ModoEnergyAPIClient:
@@ -80,16 +82,14 @@ class ModoEnergyAPIClient:
     @pa.check_types
     def get_ercot_generation_fuel_mix(
         self, date_from: date, date_to: date
-    ) -> pandera_DataFrame[ERCOTGenerationFuelMixSchema.ERCOTGenerationFuelMixSchema]:
+    ) -> pandera_DataFrame[ERCOTGenerationFuelMixSchema]:
         """
         The fuel-mix of ERCOT generation in MW.
 
         https://developers.modoenergy.com/reference/generation-fuel-mix
 
-
         Fetch ERCOT generation fuel mix data.
-        Example endpoint: 'us/ercot/nodal/generation-fuel-mix'
-        Accepts date_from and date_to as arguments (YYYY-MM-DD or YYYY-MM format).
+        Accepts date_from and date_to as date objects.
         """
         endpoint = "us/ercot/system/fuel-mix"
         params = {
@@ -104,7 +104,7 @@ class ModoEnergyAPIClient:
     @pa.check_types
     def get_ercot_modo_owners(
         self, date_from: str = None, date_to: str = None, **kwargs
-    ) -> pandera_DataFrame[ERCOT_BESS_owners_schema.ERCOT_BESS_Owners_Schema]:
+    ) -> pandera_DataFrame[ERCOT_BESS_Owners_Schema]:
         """
         The power and energy capacity of the ERCOT BESS assets owned by each Owner on a monthly basis. Updated on the first of the month every month.
 
