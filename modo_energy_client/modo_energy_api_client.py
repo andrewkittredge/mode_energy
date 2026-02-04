@@ -14,8 +14,6 @@ import pandera as pa
 from modo_energy_client import ERCOTGenerationFuelMixSchema
 from modo_energy_client import ERCOT_BESS_owners_schema
 
-REQUESTS_CACHE = requests_cache.CachedSession(cache_name="MODO_API_CACHE")
-
 
 class ModoEnergyAPIClient:
     """
@@ -24,18 +22,16 @@ class ModoEnergyAPIClient:
     """
 
     BASE_URL = "https://api.modoenergy.com/pub/v1"
+    _session: Optional[requests_cache.CachedSession]
 
-    def __init__(
-        self,
-        api_token: Optional[str] = None,
-    ):
+    def __init__(self, api_token: Optional[str] = None, cache_requests: bool = False):
         self.api_token = api_token or os.getenv("MODO_API_TOKEN")
-        if not self.api_token:
-            raise ValueError(
-                "Modo Energy API token must be provided or set in the MODO_API_TOKEN environment variable."
-            )
         self.headers = {"X-Token": self.api_token}
-        # Set up requests-cache for all requests
+        self._session = (
+            requests_cache.CachedSession(cache_name="MODO_API_CACHE")
+            if cache_requests
+            else requests.session()
+        )
 
     def get_paginated(
         self, endpoint: str, params: Optional[Dict[str, Any]] = None
@@ -48,12 +44,12 @@ class ModoEnergyAPIClient:
 
         url = f"{self.BASE_URL}/{endpoint}"
         df = pd.DataFrame()
-        page = 0
+
         with tqdm(total=None, desc="Fetching pages ", unit="page") as pbar:
             while url:
                 while True:
                     try:
-                        response = REQUESTS_CACHE.get(
+                        response = self._session.get(
                             url,
                             headers={"accept": "application/json"},
                             params=params,
@@ -76,7 +72,6 @@ class ModoEnergyAPIClient:
                     )
                 url = data.get("next")
                 params = None  # Only use params on first request
-                page += 1
 
                 pbar.update(1)
 
