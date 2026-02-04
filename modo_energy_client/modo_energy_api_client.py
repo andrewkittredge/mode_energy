@@ -111,7 +111,7 @@ class ModoEnergyAPIClient:
     @pa.check_types
     def get_ercot_modo_owners(
         self, date_from: str = None, date_to: str = None, **kwargs
-    ) -> pandera_DataFrame[ERCOT_BESS_owners_schema.ERCOT_BESS_owners_schema]:
+    ) -> pandera_DataFrame[ERCOT_BESS_owners_schema.ERCOT_BESS_Owners_Schema]:
         """
         The power and energy capacity of the ERCOT BESS assets owned by each Owner on a monthly basis. Updated on the first of the month every month.
 
