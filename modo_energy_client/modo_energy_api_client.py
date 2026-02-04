@@ -28,8 +28,6 @@ class ModoEnergyAPIClient:
     def __init__(
         self,
         api_token: Optional[str] = None,
-        cache_name: str = "modo_energy_cache",
-        cache_expire: int = 600,
     ):
         self.api_token = api_token or os.getenv("MODO_API_TOKEN")
         if not self.api_token:
